@@ -1,0 +1,55 @@
+@import "tailwindcss";
+
+/* Nokia LCD palette */
+:root {
+  --lcd: #c2cf9c;
+  --lcd-dark: #1d2b00;
+  --lcd-mid: #8fa370;
+  --body: #162040;
+  --body-light: #1f2f5e;
+  --key: #0e1830;
+  --key-shadow: #060c18;
+}
+
+body {
+  background: #0a0f1e;
+  margin: 0;
+}
+
+/* Pixel font for the LCD screen */
+.lcd-screen,
+.lcd-screen * {
+  font-family: 'VT323', 'Courier New', monospace;
+}
+
+/* Scanline overlay on the screen */
+.lcd-screen::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0, 0, 0, 0.04) 2px,
+    rgba(0, 0, 0, 0.04) 4px
+  );
+  pointer-events: none;
+  z-index: 10;
+}
+
+/* Physical key press effect */
+.phone-key {
+  box-shadow:
+    0 4px 0 var(--key-shadow),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  transition: box-shadow 80ms, transform 80ms;
+  cursor: default;
+  user-select: none;
+}
+.phone-key:active {
+  box-shadow:
+    0 1px 0 var(--key-shadow),
+    inset 0 1px 0 rgba(0, 0, 0, 0.2);
+  transform: translateY(3px);
+}
