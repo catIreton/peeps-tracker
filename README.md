@@ -1,6 +1,8 @@
 # ☎ Peeps Tracker — Speed Dial for Real Life
 
-Keep track of the people you care about. A personal contact-frequency tracker styled like a retro speed dial. Never let a relationship quietly drift again.
+Keep track of the people you care about. A personal contact-frequency tracker that looks like a Nokia phone from 1999. Never let a relationship quietly drift again.
+
+> **Font note:** The retro LCD look uses the [VT323](https://fonts.google.com/specimen/VT323) pixel font from Google Fonts. It loads from the internet on first visit — the app still works offline, it just falls back to Courier New.
 
 ---
 
@@ -53,11 +55,9 @@ Keep track of the people you care about. A personal contact-frequency tracker st
   git commit -m "initial commit"
   git push -u origin main
   ```
-- [ ] **Deploy to gh-pages**
-  ```bash
-  npm run deploy
-  ```
-  This builds the app and pushes the `dist/` folder to the `gh-pages` branch automatically.
+
+  **That's it.** Pushing to `main` automatically runs tests, builds, and deploys via GitHub Actions (`.github/workflows/deploy.yml`). No manual `npm run deploy` needed.
+
 - [ ] **Visit** `https://YOUR_USERNAME.github.io/peeps-tracker/`
 - [ ] **Bookmark it on your phone** — add to home screen for app-like feel
 
@@ -89,13 +89,24 @@ Keep track of the people you care about. A personal contact-frequency tracker st
 
 ---
 
+## Development
+
+```bash
+npm test          # run unit tests once
+npm run test:watch  # re-run on file changes
+```
+
+Tests cover the core logic in `src/lib/utils.ts` (status thresholds, day counting) and all CRUD operations in `src/lib/localData.ts`.
+
+---
+
 ## Phase 3 — Nice to Haves (Maybe Someday)
 
 - [ ] Contact log history — see past dates per person, not just the most recent
 - [ ] Mobile PWA — `manifest.json` so it installs to your home screen as an app icon
 - [ ] Export to CSV — download your full peeps list
 - [ ] Weekly email digest — Supabase edge function that emails you "who to reach out to this week"
-- [ ] GitHub Actions auto-deploy on push to `main`
+- [x] GitHub Actions auto-deploy on push to `main`
 
 ---
 
@@ -110,4 +121,6 @@ Keep track of the people you care about. A personal contact-frequency tracker st
 | [date-fns v4](https://date-fns.org) | Date math |
 | [localStorage](https://developer.mozilla.org/en-US/docs/Web/API/Window/localStorage) | Phase 1 data storage |
 | [Supabase](https://supabase.com) | Phase 2 auth + cloud DB |
-| [gh-pages](https://github.com/tschaub/gh-pages) | GitHub Pages deployment |
+| [gh-pages](https://github.com/tschaub/gh-pages) | GitHub Pages deployment (manual) |
+| [Vitest](https://vitest.dev) | Unit tests |
+| [GitHub Actions](https://docs.github.com/en/actions) | Auto-deploy on push to main |

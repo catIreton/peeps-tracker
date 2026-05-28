@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import type { Group, PersonWithStatus, Tier } from '../lib/types'
+import { DIAL_NUMS } from '../lib/constants'
 import PersonCard from './PersonCard'
 
 interface GroupSectionProps {
@@ -16,7 +17,6 @@ const TIER_LABEL: Record<Tier, string> = {
   white: '🤍WNV',
 }
 
-const DIAL_NUMS = ['①','②','③','④','⑤','⑥','⑦','⑧','⑨','⑩','⑪','⑫']
 
 export default function GroupSection({ group, dialNumber, people, onReachedOut, onGroupReachedOut }: GroupSectionProps) {
   const [justLogged, setJustLogged] = useState(false)

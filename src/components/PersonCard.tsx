@@ -4,7 +4,7 @@ import { formatDaysAgo } from '../lib/utils'
 
 interface PersonCardProps {
   person: PersonWithStatus
-  targetDays: number  // shown in tooltip / future use
+  targetDays: number
   onReachedOut: (id: string) => void
 }
 
@@ -28,8 +28,8 @@ export default function PersonCard({ person, targetDays, onReachedOut }: PersonC
   }
 
   const daysText = person.daysSince !== null
-    ? formatDaysAgo(person.daysSince)
-    : 'NEVER'
+    ? `${formatDaysAgo(person.daysSince)}/${targetDays}d`
+    : `NEVER/${targetDays}d`
 
   return (
     <div

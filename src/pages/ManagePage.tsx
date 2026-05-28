@@ -1,11 +1,12 @@
 import { useCallback, useState } from 'react'
 import { Link } from 'react-router-dom'
 import type { Group, Person, Tier } from '../lib/types'
+import { DIAL_NUMS } from '../lib/constants'
 import {
-  addGroup, updateGroup, deleteGroup, reorderGroups, getGroups,
-  addPerson, updatePerson, deletePerson, getPeople,
+  addGroup, updateGroup, deleteGroup, reorderGroups,
+  addPerson, updatePerson, deletePerson,
+  loadSortedGroups, loadSortedPeople,
 } from '../lib/localData'
-import PhoneStatusBar from '../components/PhoneStatusBar'
 
 const LCD = '#c2cf9c'
 const LCD_DARK = '#1d2b00'
@@ -16,27 +17,18 @@ const TIERS: { value: Tier; label: string }[] = [
   { value: 'white', label: '🤍WNV' },
 ]
 
-function loadGroups(): Group[] {
-  return getGroups().sort((a, b) => a.sort_order - b.sort_order || a.name.localeCompare(b.name))
-}
-function loadPeople(): Person[] {
-  return getPeople().sort((a, b) => a.name.localeCompare(b.name))
-}
-
 export default function ManagePage() {
-  const [groups, setGroups] = useState<Group[]>(loadGroups)
-  const [people, setPeople] = useState<Person[]>(loadPeople)
+  const [groups, setGroups] = useState<Group[]>(loadSortedGroups)
+  const [people, setPeople] = useState<Person[]>(loadSortedPeople)
   const [tab, setTab] = useState<'groups' | 'people'>('groups')
 
   const refresh = useCallback(() => {
-    setGroups(loadGroups())
-    setPeople(loadPeople())
+    setGroups(loadSortedGroups())
+    setPeople(loadSortedPeople())
   }, [])
 
   return (
     <div style={{ background: LCD, color: LCD_DARK, minHeight: '100%' }}>
-      <PhoneStatusBar />
-
       {/* Header */}
       <div
         className="flex items-center gap-3 px-2 py-1 border-b-2 text-base"
@@ -74,6 +66,14 @@ export default function ManagePage() {
   )
 }
 
+const inputStyle = {
+  background: LCD, color: LCD_DARK,
+  border: `2px solid ${LCD_DARK}`,
+  fontFamily: 'inherit', fontSize: 'inherit',
+  width: '100%', padding: '2px 6px',
+  outline: 'none',
+} as const
+
 // ─── Groups ───────────────────────────────────────────────────────────────────
 
 function GroupsTab({ groups, onRefresh }: { groups: Group[]; onRefresh: () => void }) {
@@ -95,8 +95,6 @@ function GroupsTab({ groups, onRefresh }: { groups: Group[]; onRefresh: () => vo
     reorderGroups(reordered.map(g => g.id))
     onRefresh()
   }
-
-  const DIAL_NUMS = ['①','②','③','④','⑤','⑥','⑦','⑧','⑨','⑩','⑪','⑫']
 
   return (
     <div className="space-y-1">
@@ -164,14 +162,6 @@ function GroupForm({ initial, onSave, onCancel }: { initial?: Group; onSave: () 
       addGroup({ name, tier, target_days: days })
     }
     onSave()
-  }
-
-  const inputStyle = {
-    background: LCD, color: LCD_DARK,
-    border: `2px solid ${LCD_DARK}`,
-    fontFamily: 'inherit', fontSize: 'inherit',
-    width: '100%', padding: '2px 6px',
-    outline: 'none',
   }
 
   return (
@@ -329,14 +319,6 @@ function PersonForm({ initial, groups, onSave, onCancel }: { initial?: Person; g
       addPerson(data)
     }
     onSave()
-  }
-
-  const inputStyle = {
-    background: LCD, color: LCD_DARK,
-    border: `2px solid ${LCD_DARK}`,
-    fontFamily: 'inherit', fontSize: 'inherit',
-    width: '100%', padding: '2px 6px',
-    outline: 'none',
   }
 
   return (

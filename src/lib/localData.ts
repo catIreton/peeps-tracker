@@ -65,3 +65,12 @@ export function updatePerson(id: string, data: Partial<Pick<Person, 'name' | 'gr
 export function deletePerson(id: string) {
   savePeopleList(getPeople().filter(p => p.id !== id))
 }
+
+// Pre-sorted views used by both TrackerPage and ManagePage
+export function loadSortedGroups(): Group[] {
+  return getGroups().sort((a, b) => a.sort_order - b.sort_order || a.name.localeCompare(b.name))
+}
+
+export function loadSortedPeople(): Person[] {
+  return getPeople().sort((a, b) => a.name.localeCompare(b.name))
+}

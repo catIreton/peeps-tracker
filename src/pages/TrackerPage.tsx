@@ -3,31 +3,23 @@ import { Link } from 'react-router-dom'
 import { format } from 'date-fns'
 import type { Group, Person, PersonWithStatus } from '../lib/types'
 import { getContactStatus, getDaysSince } from '../lib/utils'
-import { getGroups, getPeople, updatePerson } from '../lib/localData'
+import { updatePerson, loadSortedGroups, loadSortedPeople } from '../lib/localData'
 import StatsBar from '../components/StatsBar'
 import FilterBar from '../components/FilterBar'
 import type { Filter } from '../components/FilterBar'
 import GroupSection from '../components/GroupSection'
-import PhoneStatusBar from '../components/PhoneStatusBar'
 
 const LCD = '#c2cf9c'
 const LCD_DARK = '#1d2b00'
 
-function loadGroups(): Group[] {
-  return getGroups().sort((a, b) => a.sort_order - b.sort_order || a.name.localeCompare(b.name))
-}
-function loadPeople(): Person[] {
-  return getPeople().sort((a, b) => a.name.localeCompare(b.name))
-}
-
 export default function TrackerPage() {
-  const [groups, setGroups] = useState<Group[]>(loadGroups)
-  const [people, setPeople] = useState<Person[]>(loadPeople)
+  const [groups, setGroups] = useState<Group[]>(loadSortedGroups)
+  const [people, setPeople] = useState<Person[]>(loadSortedPeople)
   const [filter, setFilter] = useState<Filter>('all')
 
   const refresh = useCallback(() => {
-    setGroups(loadGroups())
-    setPeople(loadPeople())
+    setGroups(loadSortedGroups())
+    setPeople(loadSortedPeople())
   }, [])
 
   const handleReachedOut = (personId: string) => {
@@ -61,8 +53,6 @@ export default function TrackerPage() {
 
   return (
     <div style={{ background: LCD, color: LCD_DARK, minHeight: '100%' }}>
-      <PhoneStatusBar />
-
       {/* Header bar */}
       <div
         className="flex items-center justify-between px-2 py-1 border-b-2 text-base"
