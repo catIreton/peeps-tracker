@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach } from 'vitest'
 import {
   getGroups, addGroup, updateGroup, deleteGroup, reorderGroups, loadSortedGroups,
   getPeople, addPerson, updatePerson, deletePerson, loadSortedPeople,
+  getHangouts, setHangout, clearHangout,
 } from './localData'
 
 beforeEach(() => localStorage.clear())
@@ -173,5 +174,68 @@ describe('loadSortedPeople', () => {
     addPerson({ name: 'Mike', group_id: g.id, notes: null, last_contact: null })
     const sorted = loadSortedPeople()
     expect(sorted.map(p => p.name)).toEqual(['Alice', 'Mike', 'Zara'])
+  })
+})
+
+// ─── Hangouts ─────────────────────────────────────────────────────────────────
+
+describe('getHangouts', () => {
+  it('returns empty array when storage is empty', () => {
+    expect(getHangouts()).toEqual([])
+  })
+
+  it('returns empty array when storage is corrupt', () => {
+    localStorage.setItem('peeps:hangouts', 'not-json')
+    expect(getHangouts()).toEqual([])
+  })
+})
+
+describe('setHangout', () => {
+  it('creates a hangout for a person', () => {
+    setHangout('person-1', '2025-07-01')
+    const hangouts = getHangouts()
+    expect(hangouts).toHaveLength(1)
+    expect(hangouts[0].person_id).toBe('person-1')
+    expect(hangouts[0].date).toBe('2025-07-01')
+    expect(hangouts[0].id).toBeTruthy()
+  })
+
+  it('replaces an existing hangout for the same person (upsert)', () => {
+    setHangout('person-1', '2025-07-01')
+    setHangout('person-1', '2025-08-15')
+    const hangouts = getHangouts()
+    expect(hangouts).toHaveLength(1)
+    expect(hangouts[0].date).toBe('2025-08-15')
+  })
+
+  it('preserves hangouts for other people when upserting', () => {
+    setHangout('person-1', '2025-07-01')
+    setHangout('person-2', '2025-08-01')
+    setHangout('person-1', '2025-09-01')
+    const hangouts = getHangouts()
+    expect(hangouts).toHaveLength(2)
+    expect(hangouts.find(h => h.person_id === 'person-2')?.date).toBe('2025-08-01')
+  })
+})
+
+describe('clearHangout', () => {
+  it('removes the hangout for a person', () => {
+    setHangout('person-1', '2025-07-01')
+    clearHangout('person-1')
+    expect(getHangouts()).toHaveLength(0)
+  })
+
+  it('does not affect other people\'s hangouts', () => {
+    setHangout('person-1', '2025-07-01')
+    setHangout('person-2', '2025-08-01')
+    clearHangout('person-1')
+    const hangouts = getHangouts()
+    expect(hangouts).toHaveLength(1)
+    expect(hangouts[0].person_id).toBe('person-2')
+  })
+
+  it('is a no-op when no hangout exists', () => {
+    clearHangout('person-1')
+    expect(getHangouts()).toHaveLength(0)
   })
 })

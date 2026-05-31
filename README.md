@@ -1,4 +1,4 @@
-# ☎ Peeps Tracker — Speed Dial for Real Life
+# ☎ Peeps Dial — Speed Dial for Real Life
 
 Keep track of the people you care about. A personal contact-frequency tracker that looks like a Nokia phone from 1999. Never let a relationship quietly drift again.
 
@@ -9,10 +9,13 @@ Keep track of the people you care about. A personal contact-frequency tracker th
 ## What it does
 
 - Groups contacts by tier: 💛 **Lots** / 💚 **Medium** / 🤍 **Whenever**
-- Shows color-coded status dots: 🟢 good · 🟡 due soon · 🔴 overdue
+- Shows LCD-style status dots: ● current · ◐ due soon · ○ overdue
+- Stats bar at a glance: **CURRENT / DUE / OVERDUE**
 - Each group gets a speed dial number **①②③** — reorder them to set your priorities
-- One-tap **☎** button to log a contact (then the dot turns green)
-- Stats bar at a glance · Filter by tier or overdue-only
+- One-tap **☎** button to log a contact (dot turns to ●, timer resets)
+- **📅** button to plan an upcoming hangout — pick a date, it shows on the card; tapping ☎ auto-clears it
+- Filter by tier, overdue-only (**!!OVR**), or show only planned hangouts (**►PLN**)
+- **MENU** key reveals secret codes (see Easter eggs below)
 - Data lives in your browser's `localStorage` — no account or server needed (Phase 1)
 
 ---
@@ -37,7 +40,8 @@ Keep track of the people you care about. A personal contact-frequency tracker th
   - Fill in name, group, and last-contact date if you remember it
 - [ ] **Use the speed dial** — back on the main screen, groups are numbered ①②③
   - Use the ↑↓ arrows in Manage → Groups to set which group is #1, #2, etc.
-  - Tap ☎ on a person when you've reached out — dot turns green, timer resets
+  - Tap ☎ on a person when you've reached out — dot turns ●, timer resets
+  - Tap 📅 to schedule a future hangout — the date shows on the card until you tap ☎
 
 ---
 
@@ -46,7 +50,7 @@ Keep track of the people you care about. A personal contact-frequency tracker th
 > So you can access it from your phone without running a local server.
 
 - [ ] **Create a GitHub repo** named `peeps-tracker`
-  - Settings → Pages → Source: `gh-pages` branch
+  - Settings → Pages → Source: **GitHub Actions** (not the legacy `gh-pages` branch)
 - [ ] **Initialize git and push**
   ```bash
   git init
@@ -56,12 +60,26 @@ Keep track of the people you care about. A personal contact-frequency tracker th
   git push -u origin main
   ```
 
-  **That's it.** Pushing to `main` automatically runs tests, builds, and deploys via GitHub Actions (`.github/workflows/deploy.yml`). No manual `npm run deploy` needed.
+  **That's it.** Pushing to `main` automatically runs tests, builds, and deploys via GitHub Actions (`.github/workflows/deploy.yml`). No manual deploy step needed.
 
 - [ ] **Visit** `https://YOUR_USERNAME.github.io/peeps-tracker/`
 - [ ] **Bookmark it on your phone** — add to home screen for app-like feel
 
 > ⚠️ Each browser/device has its own localStorage — data won't sync between your phone and laptop (that's Phase 2).
+
+---
+
+## Easter Eggs
+
+Press **MENU** on the phone to see the full list. Or just try them:
+
+| Code | What happens |
+|---|---|
+| `*#06#` | IMEI / device info screen |
+| `*#0000#` | Firmware info screen |
+| `*#99#` | Secret message |
+| `5555` | Snake game (use D-pad) |
+| `112` | Nokia Gran Vals ringtone |
 
 ---
 
@@ -73,7 +91,7 @@ Keep track of the people you care about. A personal contact-frequency tracker th
 - [ ] Open the **SQL Editor** → paste and run the contents of [`supabase/schema.sql`](supabase/schema.sql)
   - This creates the `groups` and `people` tables with Row Level Security
 - [ ] In Supabase: **Settings → API** → copy your **Project URL** and **anon public key**
-- [ ] Fill them in to [`.env.local`](.env.local):
+- [ ] Fill them in to `.env.local`:
   ```
   VITE_SUPABASE_URL=https://your-project-id.supabase.co
   VITE_SUPABASE_ANON_KEY=your-anon-key-here
@@ -84,7 +102,7 @@ Keep track of the people you care about. A personal contact-frequency tracker th
   ```
 - [ ] Wire up auth in the app (swap `localData` calls for Supabase calls, add magic-link login page)
   - The `LoginPage.tsx` and `supabaseClient.ts` are already scaffolded in `src/`
-- [ ] Re-deploy: `npm run deploy`
+- [ ] Re-deploy: push to `main`
 - [ ] Test end-to-end: sign up with your email, click the magic link, add a group + person, refresh — data should persist
 
 ---
@@ -92,21 +110,22 @@ Keep track of the people you care about. A personal contact-frequency tracker th
 ## Development
 
 ```bash
-npm test          # run unit tests once
+npm test            # run unit tests once
 npm run test:watch  # re-run on file changes
 ```
 
-Tests cover the core logic in `src/lib/utils.ts` (status thresholds, day counting) and all CRUD operations in `src/lib/localData.ts`.
+Tests cover the core logic in `src/lib/utils.ts` (status thresholds, day counting) and all CRUD operations in `src/lib/localData.ts` including hangout planning. 42 tests total, run automatically on every push via GitHub Actions.
 
 ---
 
 ## Phase 3 — Nice to Haves (Maybe Someday)
 
+- [x] Plan hangout dates — 📅 button on each person, ►PLN filter to see all upcoming plans
+- [x] GitHub Actions auto-deploy on push to `main`
 - [ ] Contact log history — see past dates per person, not just the most recent
 - [ ] Mobile PWA — `manifest.json` so it installs to your home screen as an app icon
 - [ ] Export to CSV — download your full peeps list
 - [ ] Weekly email digest — Supabase edge function that emails you "who to reach out to this week"
-- [x] GitHub Actions auto-deploy on push to `main`
 
 ---
 
@@ -121,6 +140,5 @@ Tests cover the core logic in `src/lib/utils.ts` (status thresholds, day countin
 | [date-fns v4](https://date-fns.org) | Date math |
 | [localStorage](https://developer.mozilla.org/en-US/docs/Web/API/Window/localStorage) | Phase 1 data storage |
 | [Supabase](https://supabase.com) | Phase 2 auth + cloud DB |
-| [gh-pages](https://github.com/tschaub/gh-pages) | GitHub Pages deployment (manual) |
 | [Vitest](https://vitest.dev) | Unit tests |
-| [GitHub Actions](https://docs.github.com/en/actions) | Auto-deploy on push to main |
+| [GitHub Actions](https://docs.github.com/en/actions) | Auto-deploy + auto-test on push to main |

@@ -1,9 +1,9 @@
 import { useCallback, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { format } from 'date-fns'
-import type { Group, Person, PersonWithStatus } from '../lib/types'
+import type { Group, Hangout, Person, PersonWithStatus } from '../lib/types'
 import { getContactStatus, getDaysSince } from '../lib/utils'
-import { updatePerson, loadSortedGroups, loadSortedPeople } from '../lib/localData'
+import { updatePerson, loadSortedGroups, loadSortedPeople, getHangouts, setHangout, clearHangout } from '../lib/localData'
 import StatsBar from '../components/StatsBar'
 import FilterBar from '../components/FilterBar'
 import type { Filter } from '../components/FilterBar'
@@ -15,23 +15,41 @@ const LCD_DARK = '#1d2b00'
 export default function TrackerPage() {
   const [groups, setGroups] = useState<Group[]>(loadSortedGroups)
   const [people, setPeople] = useState<Person[]>(loadSortedPeople)
+  const [hangouts, setHangoutsState] = useState<Hangout[]>(getHangouts)
   const [filter, setFilter] = useState<Filter>('all')
 
   const refresh = useCallback(() => {
     setGroups(loadSortedGroups())
     setPeople(loadSortedPeople())
+    setHangoutsState(getHangouts())
   }, [])
 
   const handleReachedOut = (personId: string) => {
     updatePerson(personId, { last_contact: format(new Date(), 'yyyy-MM-dd') })
+    clearHangout(personId)
     refresh()
   }
 
   const handleGroupReachedOut = (groupId: string) => {
     const today = format(new Date(), 'yyyy-MM-dd')
-    people.filter(p => p.group_id === groupId).forEach(p => updatePerson(p.id, { last_contact: today }))
+    people.filter(p => p.group_id === groupId).forEach(p => {
+      updatePerson(p.id, { last_contact: today })
+      clearHangout(p.id)
+    })
     refresh()
   }
+
+  const handlePlanHangout = (personId: string, date: string) => {
+    setHangout(personId, date)
+    refresh()
+  }
+
+  const handleCancelHangout = (personId: string) => {
+    clearHangout(personId)
+    refresh()
+  }
+
+  const hangoutsMap: Record<string, string> = Object.fromEntries(hangouts.map(h => [h.person_id, h.date]))
 
   const peopleWithStatus: PersonWithStatus[] = people.map(p => {
     const group = groups.find(g => g.id === p.group_id)
@@ -45,6 +63,7 @@ export default function TrackerPage() {
   const visiblePeople = peopleWithStatus.filter(p => {
     if (filter === 'all') return true
     if (filter === 'overdue') return p.status === 'overdue'
+    if (filter === 'plan') return p.id in hangoutsMap
     const group = groups.find(g => g.id === p.group_id)
     return group?.tier === filter
   })
@@ -58,7 +77,10 @@ export default function TrackerPage() {
         className="flex items-center justify-between px-2 py-1 border-b-2 text-base"
         style={{ borderColor: LCD_DARK }}
       >
-        <span className="tracking-widest font-bold">SPEED DIAL</span>
+        <div>
+          <div className="tracking-widest font-bold">SPEED DIAL</div>
+          <div className="text-xs opacity-50 tracking-wide">STAY IN TOUCH</div>
+        </div>
         <Link
           to="/manage"
           className="px-2 py-0.5 text-sm border-2"
@@ -82,8 +104,11 @@ export default function TrackerPage() {
               group={group}
               dialNumber={i + 1}
               people={visiblePeople.filter(p => p.group_id === group.id)}
+              hangoutsMap={hangoutsMap}
               onReachedOut={handleReachedOut}
               onGroupReachedOut={handleGroupReachedOut}
+              onPlanHangout={handlePlanHangout}
+              onCancelHangout={handleCancelHangout}
             />
           ))
         )}
@@ -94,15 +119,16 @@ export default function TrackerPage() {
 
 function EmptyState({ filter, hasPeople }: { filter: Filter; hasPeople: boolean }) {
   const isAllClear = filter === 'overdue' && hasPeople
+  const isNoPlans = filter === 'plan' && hasPeople
+  const glyph = isAllClear ? '■' : isNoPlans ? '►' : '□'
+  const label = isAllClear ? 'ALL CLEAR!' : isNoPlans ? 'NO PLANS YET' : !hasPeople ? 'NO CONTACTS' : 'NO MATCH'
   return (
     <div
       className="flex flex-col items-center justify-center py-12 text-center"
       style={{ color: '#1d2b00' }}
     >
-      <div className="text-4xl mb-2">{isAllClear ? '■' : '□'}</div>
-      <div className="text-base tracking-widest">
-        {isAllClear ? 'ALL CLEAR!' : !hasPeople ? 'NO CONTACTS' : 'NO MATCH'}
-      </div>
+      <div className="text-4xl mb-2">{glyph}</div>
+      <div className="text-base tracking-widest">{label}</div>
       {!hasPeople && (
         <Link
           to="/manage"

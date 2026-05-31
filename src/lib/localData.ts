@@ -1,7 +1,8 @@
-import type { Group, Person } from './types'
+import type { Group, Hangout, Person } from './types'
 
 const GROUPS_KEY = 'peeps:groups'
 const PEOPLE_KEY = 'peeps:people'
+const HANGOUTS_KEY = 'peeps:hangouts'
 
 export function getGroups(): Group[] {
   try {
@@ -64,6 +65,29 @@ export function updatePerson(id: string, data: Partial<Pick<Person, 'name' | 'gr
 
 export function deletePerson(id: string) {
   savePeopleList(getPeople().filter(p => p.id !== id))
+}
+
+export function getHangouts(): Hangout[] {
+  try {
+    const raw = localStorage.getItem(HANGOUTS_KEY)
+    return raw ? (JSON.parse(raw) as Hangout[]) : []
+  } catch {
+    return []
+  }
+}
+
+function saveHangouts(hangouts: Hangout[]) {
+  localStorage.setItem(HANGOUTS_KEY, JSON.stringify(hangouts))
+}
+
+// Upserts — one hangout per person
+export function setHangout(personId: string, date: string): void {
+  const rest = getHangouts().filter(h => h.person_id !== personId)
+  saveHangouts([...rest, { id: crypto.randomUUID(), person_id: personId, date }])
+}
+
+export function clearHangout(personId: string): void {
+  saveHangouts(getHangouts().filter(h => h.person_id !== personId))
 }
 
 // Pre-sorted views used by both TrackerPage and ManagePage

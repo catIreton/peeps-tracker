@@ -12,12 +12,13 @@ const KEYS = [
   { k: '*', s: '' },   { k: '0', s: '+' },   { k: '#', s: '' },
 ]
 
-type EasterEgg = 'imei' | 'firmware' | 'secret' | null
+type EasterEgg = 'imei' | 'firmware' | 'secret' | 'codes' | null
 
 const OVERLAYS: Record<NonNullable<EasterEgg>, string[]> = {
   imei:     ['IMEI: 350926-04-821009-8', 'S/N: 0501240-10', '', 'WARRANTY: OK'],
   firmware: ['V 05.31', '27-11-98', 'NSM-1', '', 'NOKIA MOBILE'],
   secret:   ['YOU FOUND IT!', '', '☎ KEEP IN TOUCH', '♥ PEEPS TRACKER'],
+  codes:    ['── SECRET CODES ──', '', '*#06#  DEVICE INFO', '*#0000#  FIRMWARE', '*#99#  SECRET MSG', '5555  SNAKE GAME', '112  RINGTONE'],
 }
 
 export default function PhoneFrame({ children }: Props) {
@@ -51,10 +52,10 @@ export default function PhoneFrame({ children }: Props) {
       <PhoneStatusBar />
       <SnakeGame keySignal={keySignal} onExit={() => setSnakeActive(false)} />
     </>
-  ) : easterEgg ? (
+  ) : easterEgg && easterEgg !== 'codes' ? (
     <>
       <PhoneStatusBar />
-      <EasterEggOverlay lines={OVERLAYS[easterEgg]} />
+      <EasterEggOverlay lines={OVERLAYS[easterEgg]} onDismiss={() => setEasterEgg(null)} />
     </>
   ) : (
     <>
@@ -100,16 +101,20 @@ export default function PhoneFrame({ children }: Props) {
         >
           {/* LCD screen */}
           <div
-            className="lcd-screen relative overflow-hidden"
-            style={{
-              background: '#c2cf9c',
-              borderRadius: 7,
-              maxHeight: 480,
-              overflowY: 'auto',
-              overflowX: 'hidden',
-            }}
+            className="lcd-screen relative"
+            style={{ background: '#c2cf9c', borderRadius: 7, overflow: 'hidden' }}
           >
-            {screenContent}
+            {/* Scrollable content — determines screen height */}
+            <div style={{ maxHeight: 480, overflowY: 'auto', overflowX: 'hidden' }}>
+              {screenContent}
+            </div>
+            {/* Codes overlay — sits on top without affecting layout */}
+            {easterEgg === 'codes' && (
+              <div className="absolute inset-0 flex flex-col" style={{ background: '#c2cf9c', zIndex: 10 }}>
+                <PhoneStatusBar />
+                <EasterEggOverlay lines={OVERLAYS.codes} onDismiss={() => setEasterEgg(null)} />
+              </div>
+            )}
           </div>
         </div>
 
@@ -130,12 +135,13 @@ export default function PhoneFrame({ children }: Props) {
 
         {/* Soft keys row */}
         <div className="grid grid-cols-3 gap-2 px-3 mb-3">
-          <div
+          <button
+            onClick={() => setEasterEgg(prev => prev === 'codes' ? null : 'codes')}
             className="phone-key rounded-lg flex items-center justify-center"
-            style={{ height: 32, background: '#0e1830', border: '1px solid #0a1228' }}
+            style={{ height: 32, background: '#0e1830', border: '1px solid #0a1228', cursor: 'pointer' }}
           >
             <span style={{ color: '#a0b0d0', fontSize: 10, fontFamily: 'Arial, sans-serif', letterSpacing: '0.1em' }}>MENU</span>
-          </div>
+          </button>
           <div />
           <div
             className="phone-key rounded-lg flex items-center justify-center"
@@ -243,11 +249,12 @@ export default function PhoneFrame({ children }: Props) {
   )
 }
 
-function EasterEggOverlay({ lines }: { lines: string[] }) {
+function EasterEggOverlay({ lines, onDismiss }: { lines: string[]; onDismiss: () => void }) {
   return (
     <div
       className="flex flex-col items-center justify-center py-6 px-4"
-      style={{ minHeight: 160, color: '#1d2b00' }}
+      style={{ minHeight: 160, color: '#1d2b00', cursor: 'pointer' }}
+      onClick={onDismiss}
     >
       <div className="border-2 w-full p-3 text-center" style={{ borderColor: '#1d2b00' }}>
         {lines.map((line, i) => (
@@ -255,6 +262,7 @@ function EasterEggOverlay({ lines }: { lines: string[] }) {
             {line || '—'}
           </div>
         ))}
+        <div className="text-xs opacity-40 mt-2">tap to close</div>
       </div>
     </div>
   )

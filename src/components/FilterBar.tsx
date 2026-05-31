@@ -1,4 +1,4 @@
-export type Filter = 'all' | 'gold' | 'green' | 'white' | 'overdue'
+export type Filter = 'all' | 'gold' | 'green' | 'white' | 'overdue' | 'plan'
 
 interface FilterBarProps {
   active: Filter
@@ -11,6 +11,7 @@ const FILTERS: { id: Filter; label: string }[] = [
   { id: 'green',   label: '💚MED' },
   { id: 'white',   label: '🤍WNV' },
   { id: 'overdue', label: '!!OVR' },
+  { id: 'plan',    label: '►PLN' },
 ]
 
 export default function FilterBar({ active, onChange }: FilterBarProps) {

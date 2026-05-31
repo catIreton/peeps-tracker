@@ -12,11 +12,11 @@ export default function StatsBar({ people }: StatsBarProps) {
       className="flex items-center justify-around py-1 text-base border-b-2"
       style={{ borderColor: '#1d2b00', color: '#1d2b00' }}
     >
-      <span title="All good">■ {good} OK</span>
+      <span title="Contacted within target">● {good} CURRENT</span>
       <span style={{ color: '#3d4d00' }}>│</span>
-      <span title="Due soon">▪ {due} SOON</span>
+      <span title="Contact due soon">◐ {due} DUE</span>
       <span style={{ color: '#3d4d00' }}>│</span>
-      <span title="Overdue" style={{ fontWeight: 'bold' }}>□ {overdue} LATE</span>
+      <span title="Contact overdue" style={{ fontWeight: 'bold' }}>○ {overdue} OVERDUE</span>
     </div>
   )
 }

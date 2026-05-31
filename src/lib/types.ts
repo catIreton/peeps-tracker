@@ -23,3 +23,9 @@ export interface PersonWithStatus extends Person {
   status: ContactStatus
   daysSince: number | null
 }
+
+export interface Hangout {
+  id: string
+  person_id: string
+  date: string  // YYYY-MM-DD
+}
