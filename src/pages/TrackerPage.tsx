@@ -30,6 +30,12 @@ export default function TrackerPage() {
     refresh()
   }
 
+  const handleUndoReachedOut = (personId: string, prevLastContact: string | null, prevHangout: string | null) => {
+    updatePerson(personId, { last_contact: prevLastContact })
+    if (prevHangout) setHangout(personId, prevHangout)
+    refresh()
+  }
+
   const handleGroupReachedOut = (groupId: string) => {
     const today = format(new Date(), 'yyyy-MM-dd')
     people.filter(p => p.group_id === groupId).forEach(p => {
@@ -106,6 +112,7 @@ export default function TrackerPage() {
               people={visiblePeople.filter(p => p.group_id === group.id)}
               hangoutsMap={hangoutsMap}
               onReachedOut={handleReachedOut}
+              onUndoReachedOut={handleUndoReachedOut}
               onGroupReachedOut={handleGroupReachedOut}
               onPlanHangout={handlePlanHangout}
               onCancelHangout={handleCancelHangout}

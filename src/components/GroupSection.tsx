@@ -9,6 +9,7 @@ interface GroupSectionProps {
   people: PersonWithStatus[]
   hangoutsMap: Record<string, string>
   onReachedOut: (personId: string) => void
+  onUndoReachedOut: (personId: string, prevLastContact: string | null, prevHangout: string | null) => void
   onGroupReachedOut: (groupId: string) => void
   onPlanHangout: (personId: string, date: string) => void
   onCancelHangout: (personId: string) => void
@@ -21,7 +22,7 @@ const TIER_LABEL: Record<Tier, string> = {
 }
 
 
-export default function GroupSection({ group, dialNumber, people, hangoutsMap, onReachedOut, onGroupReachedOut, onPlanHangout, onCancelHangout }: GroupSectionProps) {
+export default function GroupSection({ group, dialNumber, people, hangoutsMap, onReachedOut, onUndoReachedOut, onGroupReachedOut, onPlanHangout, onCancelHangout }: GroupSectionProps) {
   const [justLogged, setJustLogged] = useState(false)
 
   const handleDialAll = () => {
@@ -70,6 +71,7 @@ export default function GroupSection({ group, dialNumber, people, hangoutsMap, o
           targetDays={group.target_days}
           hangoutDate={hangoutsMap[person.id] ?? null}
           onReachedOut={onReachedOut}
+          onUndoReachedOut={onUndoReachedOut}
           onPlanHangout={onPlanHangout}
           onCancelHangout={onCancelHangout}
         />

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { format, parseISO } from 'date-fns'
 import type { PersonWithStatus } from '../lib/types'
 import { formatDaysAgo } from '../lib/utils'
@@ -8,6 +8,7 @@ interface PersonCardProps {
   targetDays: number
   hangoutDate: string | null
   onReachedOut: (id: string) => void
+  onUndoReachedOut: (id: string, prevLastContact: string | null, prevHangout: string | null) => void
   onPlanHangout: (id: string, date: string) => void
   onCancelHangout: (id: string) => void
 }
@@ -22,19 +23,31 @@ const LCD = '#c2cf9c'
 const LCD_DARK = '#1d2b00'
 const LCD_MID = '#8fa370'
 
-export default function PersonCard({ person, targetDays, hangoutDate, onReachedOut, onPlanHangout, onCancelHangout }: PersonCardProps) {
+export default function PersonCard({ person, targetDays, hangoutDate, onReachedOut, onUndoReachedOut, onPlanHangout, onCancelHangout }: PersonCardProps) {
   const [justLogged, setJustLogged] = useState(false)
   const [flashing, setFlashing] = useState(false)
   const [showPlanner, setShowPlanner] = useState(false)
   const [draftDate, setDraftDate] = useState('')
+  const prevLastContactRef = useRef<string | null>(null)
+  const prevHangoutRef = useRef<string | null>(null)
+  const loggedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const handleCall = () => {
+    prevLastContactRef.current = person.last_contact
+    prevHangoutRef.current = hangoutDate
     onReachedOut(person.id)
     setFlashing(true)
     setTimeout(() => setFlashing(false), 100)
     setJustLogged(true)
-    setTimeout(() => setJustLogged(false), 2000)
+    if (loggedTimerRef.current) clearTimeout(loggedTimerRef.current)
+    loggedTimerRef.current = setTimeout(() => setJustLogged(false), 3000)
     setShowPlanner(false)
+  }
+
+  const handleUndo = () => {
+    if (loggedTimerRef.current) clearTimeout(loggedTimerRef.current)
+    setJustLogged(false)
+    onUndoReachedOut(person.id, prevLastContactRef.current, prevHangoutRef.current)
   }
 
   const handleOpenPlanner = () => {
@@ -107,9 +120,9 @@ export default function PersonCard({ person, targetDays, hangoutDate, onReachedO
             </button>
           ) : null}
 
-          {/* Call button */}
+          {/* Call button — doubles as undo for 3s after logging */}
           <button
-            onClick={handleCall}
+            onClick={justLogged ? handleUndo : handleCall}
             className="shrink-0 ml-0.5 phone-key rounded flex items-center justify-center text-base leading-none"
             style={{
               width: 32, height: 26,
@@ -118,7 +131,7 @@ export default function PersonCard({ person, targetDays, hangoutDate, onReachedO
               border: '1px solid #1d2b00',
               fontFamily: 'inherit',
             }}
-            title={`Reached out to ${person.name} (target: ${targetDays}d)`}
+            title={justLogged ? 'Tap to undo' : `Reached out to ${person.name} (target: ${targetDays}d)`}
           >
             {justLogged ? '✓' : '☎'}
           </button>
