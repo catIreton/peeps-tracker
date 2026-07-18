@@ -59,7 +59,7 @@ export function addPerson(data: Pick<Person, 'name' | 'group_id' | 'notes' | 'la
   return person
 }
 
-export function updatePerson(id: string, data: Partial<Pick<Person, 'name' | 'group_id' | 'notes' | 'last_contact'>>) {
+export function updatePerson(id: string, data: Partial<Pick<Person, 'name' | 'group_id' | 'notes' | 'last_contact' | 'skipped'>>) {
   savePeopleList(getPeople().map(p => (p.id === id ? { ...p, ...data } : p)))
 }
 
