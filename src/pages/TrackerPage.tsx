@@ -25,13 +25,24 @@ export default function TrackerPage() {
   }, [])
 
   const handleReachedOut = (personId: string) => {
-    updatePerson(personId, { last_contact: format(new Date(), 'yyyy-MM-dd') })
+    updatePerson(personId, { last_contact: format(new Date(), 'yyyy-MM-dd'), skipped: false })
     clearHangout(personId)
     refresh()
   }
 
-  const handleUndoReachedOut = (personId: string, prevLastContact: string | null, prevHangout: string | null) => {
-    updatePerson(personId, { last_contact: prevLastContact })
+  const handleSkipHangout = (personId: string) => {
+    updatePerson(personId, { last_contact: format(new Date(), 'yyyy-MM-dd'), skipped: true })
+    clearHangout(personId)
+    refresh()
+  }
+
+  const handleUndoReachedOut = (
+    personId: string,
+    prevLastContact: string | null,
+    prevHangout: string | null,
+    prevSkipped?: boolean
+  ) => {
+    updatePerson(personId, { last_contact: prevLastContact, skipped: prevSkipped ?? false })
     if (prevHangout) setHangout(personId, prevHangout)
     refresh()
   }
@@ -39,7 +50,7 @@ export default function TrackerPage() {
   const handleGroupReachedOut = (groupId: string) => {
     const today = format(new Date(), 'yyyy-MM-dd')
     people.filter(p => p.group_id === groupId).forEach(p => {
-      updatePerson(p.id, { last_contact: today })
+      updatePerson(p.id, { last_contact: today, skipped: false })
       clearHangout(p.id)
     })
     refresh()
@@ -116,6 +127,7 @@ export default function TrackerPage() {
               onGroupReachedOut={handleGroupReachedOut}
               onPlanHangout={handlePlanHangout}
               onCancelHangout={handleCancelHangout}
+              onSkipHangout={handleSkipHangout}
             />
           ))
         )}

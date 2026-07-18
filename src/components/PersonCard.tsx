@@ -8,9 +8,10 @@ interface PersonCardProps {
   targetDays: number
   hangoutDate: string | null
   onReachedOut: (id: string) => void
-  onUndoReachedOut: (id: string, prevLastContact: string | null, prevHangout: string | null) => void
+  onUndoReachedOut: (id: string, prevLastContact: string | null, prevHangout: string | null, prevSkipped?: boolean) => void
   onPlanHangout: (id: string, date: string) => void
   onCancelHangout: (id: string) => void
+  onSkipHangout: (id: string) => void
 }
 
 const STATUS_GLYPH: Record<string, string> = {
@@ -23,18 +24,20 @@ const LCD = '#c2cf9c'
 const LCD_DARK = '#1d2b00'
 const LCD_MID = '#8fa370'
 
-export default function PersonCard({ person, targetDays, hangoutDate, onReachedOut, onUndoReachedOut, onPlanHangout, onCancelHangout }: PersonCardProps) {
+export default function PersonCard({ person, targetDays, hangoutDate, onReachedOut, onUndoReachedOut, onPlanHangout, onCancelHangout, onSkipHangout }: PersonCardProps) {
   const [justLogged, setJustLogged] = useState(false)
   const [flashing, setFlashing] = useState(false)
   const [showPlanner, setShowPlanner] = useState(false)
   const [draftDate, setDraftDate] = useState('')
   const prevLastContactRef = useRef<string | null>(null)
   const prevHangoutRef = useRef<string | null>(null)
+  const prevSkippedRef = useRef<boolean | undefined>(false)
   const loggedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const handleCall = () => {
     prevLastContactRef.current = person.last_contact
     prevHangoutRef.current = hangoutDate
+    prevSkippedRef.current = person.skipped
     onReachedOut(person.id)
     setFlashing(true)
     setTimeout(() => setFlashing(false), 100)
@@ -44,16 +47,27 @@ export default function PersonCard({ person, targetDays, hangoutDate, onReachedO
     setShowPlanner(false)
   }
 
+  const handleSkip = () => {
+    prevLastContactRef.current = person.last_contact
+    prevHangoutRef.current = hangoutDate
+    prevSkippedRef.current = person.skipped
+    onSkipHangout(person.id)
+    setJustLogged(true)
+    if (loggedTimerRef.current) clearTimeout(loggedTimerRef.current)
+    loggedTimerRef.current = setTimeout(() => setJustLogged(false), 3000)
+    setShowPlanner(false)
+  }
+
   const handleUndo = () => {
     if (loggedTimerRef.current) clearTimeout(loggedTimerRef.current)
     setJustLogged(false)
-    onUndoReachedOut(person.id, prevLastContactRef.current, prevHangoutRef.current)
+    onUndoReachedOut(person.id, prevLastContactRef.current, prevHangoutRef.current, prevSkippedRef.current)
   }
 
   const handleOpenPlanner = () => {
     const tomorrow = new Date()
     tomorrow.setDate(tomorrow.getDate() + 1)
-    setDraftDate(tomorrow.toISOString().split('T')[0])
+    setDraftDate(format(tomorrow, 'yyyy-MM-dd'))
     setShowPlanner(true)
   }
 
@@ -70,6 +84,7 @@ export default function PersonCard({ person, targetDays, hangoutDate, onReachedO
   const daysText = person.daysSince !== null
     ? `${formatDaysAgo(person.daysSince)}/${targetDays}d`
     : `NEVER/${targetDays}d`
+  const showSkippedMark = person.skipped && !hangoutDate
 
   return (
     <div
@@ -94,12 +109,27 @@ export default function PersonCard({ person, targetDays, hangoutDate, onReachedO
               {hangoutOverdue ? `!! ${format(parseISO(hangoutDate), 'MMM d')}` : `📅 ${format(parseISO(hangoutDate), 'MMM d')}`}
             </span>
           ) : (
-            <span className="shrink-0 text-xs opacity-60">{daysText}</span>
+            <span className="shrink-0 text-xs opacity-60">
+              {daysText}
+              {showSkippedMark && <span title="Last hangout was skipped, not an actual contact"> ⤼skip</span>}
+            </span>
           )}
         </div>
 
         <div className="flex items-center gap-1">
-          {/* Plan / Cancel hangout button */}
+          {/* Skip button — always available, independent of a planned hangout */}
+          {!showPlanner && (
+            <button
+              onClick={handleSkip}
+              className="shrink-0 phone-key flex items-center justify-center text-xs leading-none"
+              style={{ width: 24, height: 20, background: 'transparent', color: LCD_DARK, border: `1px solid ${LCD_MID}` }}
+              title="Skip (resets the timeline, marked as skipped)"
+            >
+              ⤼
+            </button>
+          )}
+
+          {/* Cancel / Plan hangout button */}
           {hangoutDate && !showPlanner ? (
             <button
               onClick={() => onCancelHangout(person.id)}

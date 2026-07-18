@@ -17,6 +17,7 @@ export interface Person {
   name: string
   last_contact: string | null
   notes: string | null
+  skipped?: boolean
 }
 
 export interface PersonWithStatus extends Person {
